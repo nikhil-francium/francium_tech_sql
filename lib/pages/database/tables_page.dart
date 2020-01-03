@@ -55,7 +55,7 @@ class _TablesListUI extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: GestureDetector(
                         onTap: (){
-                          postgresConnectionProvider.updateQuery(query: 'select * from ${tablesList[index][0]} limit 50');
+                          postgresConnectionProvider.updateQuery(query: 'select * from ${tablesList[index][0]}');
                           Navigator.push(context, MaterialPageRoute(builder: (context){
                             return ChangeNotifierProvider<PostgresConnectionProvider>.value(
                               value: postgresConnectionProvider,

@@ -98,6 +98,7 @@ class QueryEditorPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          postgresConnectionProvider.resetPaginationCount();
           postgresConnectionProvider.resetFilters();
           await postgresConnectionProvider.executeQuery();
           streamController.sink.add(2);
