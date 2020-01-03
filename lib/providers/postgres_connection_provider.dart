@@ -13,6 +13,10 @@ class PostgresConnectionProvider  extends ChangeNotifier{
   String message = '';
   List<List<dynamic>> results = [];
   List<dynamic> columnHeaders = [];
+  int selectedIndex = 0;
+  bool sortAscending = true;
+  Type selectedIndexType = String;
+  List<dynamic> resultsFirstRow = [];
 
 
   PostgresConnectionProvider({@required this.connectionModel});
@@ -42,8 +46,11 @@ class PostgresConnectionProvider  extends ChangeNotifier{
 
   Future<void> executeQuery() async{
     try{
+      resetFilters();
       results = await postgreSQLConnection.query(query);
       if(results != null && results.isNotEmpty) {
+        resultsFirstRow = results[0];
+        selectedIndexType = results[0][selectedIndex].runtimeType;
         columnHeaders = await getColumnsFromMap();
       }else{
         results = [];
@@ -74,6 +81,19 @@ class PostgresConnectionProvider  extends ChangeNotifier{
     return cells;
   }
 
+  void updateResults({@required List<List<dynamic>> currentResult, @required int sortIndex, @required bool isSortAscending}){
+    selectedIndex = sortIndex;
+    sortAscending = isSortAscending;
+    results = currentResult;
+    notifyListeners();
+  }
+
+  void resetFilters(){
+    selectedIndex = 0;
+    sortAscending = true;
+    selectedIndexType = String;
+    notifyListeners();
+  }
 
 
 }
