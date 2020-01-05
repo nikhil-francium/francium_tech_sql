@@ -18,9 +18,9 @@ class ConnectionsList extends StatelessWidget {
       body: SafeArea(
         child: Container(
           padding: EdgeInsets.all(15.0),
-          child: connectionsListProvider.connections.isEmpty
+          child:  connectionsListProvider.connections.isEmpty
               ? Center(
-                  child: Text('No Connections Found'),
+                  child: Text(connectionsListProvider.sharedPreferences != null ? 'No Connections Found' : 'Loading connections...'),
                 )
               : ListView(
                   children: connectionsListProvider.connections
@@ -35,13 +35,16 @@ class ConnectionsList extends StatelessWidget {
                       .toList()),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => NewConnectionPage()));
-        },
-        tooltip: 'Add Connection',
-        child: Icon(Icons.add),
+      floatingActionButton: Visibility(
+        visible: connectionsListProvider.sharedPreferences != null,
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => NewConnectionPage()));
+          },
+          tooltip: 'Add Connection',
+          child: Icon(Icons.add),
+        ),
       ),
     );
   }

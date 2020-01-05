@@ -239,10 +239,10 @@ class _CreateConnectionState extends State<CreateConnection> {
       child: RaisedButton(
         padding: EdgeInsets.symmetric(vertical: 15.0),
         child: Text('Add Connection'),
-        onPressed: () {
+        onPressed: () async{
           FocusScope.of(context).requestFocus(FocusNode());
           if (widget.formKey.currentState.validate()) {
-            connectionsListProvider.addConnection(
+            await connectionsListProvider.addConnection(
                 connectionModel: widget.connectionModel);
             Navigator.pushAndRemoveUntil(context,
                 MaterialPageRoute(builder: (context) => ConnectionsList()),(Route<dynamic> route) => false);
