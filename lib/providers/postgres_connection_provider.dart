@@ -8,6 +8,7 @@ class PostgresConnectionProvider extends ChangeNotifier {
   PostgreSQLConnection postgreSQLConnection;
   bool isConnected = false;
   String query;
+  String executableQuery;
   String message = '';
   List<List<dynamic>> results = [];
   List<dynamic> columnHeaders = [];
@@ -43,20 +44,22 @@ class PostgresConnectionProvider extends ChangeNotifier {
     return query;
   }
 
-  Future<void> executeQuery({String currentQuery, bool isForwardFetch = true}) async {
+  Future<void> executeQuery(
+      {String currentQuery, bool isForwardFetch = true}) async {
     try {
       resetFilters();
-      results = await postgreSQLConnection
-          .query(currentQuery ?? '${query.trim()} limit ${offset + 1}');
+      String queryToBeExecuted =
+          currentQuery ?? checkQuery(removeSemiColon(query.trim()));
+      results = await postgreSQLConnection.query(queryToBeExecuted);
       if (results != null && results.isNotEmpty) {
         if (results.length <= offset) {
           reachedMaxRows = true;
-        }else {
+        } else {
           List<List<dynamic>> currentResult = List.of(results);
           currentResult.removeLast();
           results = currentResult;
         }
-        if(isForwardFetch){
+        if (isForwardFetch) {
           if (results.length == offset) {
             minIndex = maxIndex + 1;
             maxIndex += offset;
@@ -66,7 +69,7 @@ class PostgresConnectionProvider extends ChangeNotifier {
             maxIndex += results.length;
             currentOffset = maxIndex - minIndex + 1;
           }
-        }else {
+        } else {
           if (maxIndex - minIndex + 1 < offset) {
             maxIndex -= currentOffset;
           } else {
@@ -78,7 +81,8 @@ class PostgresConnectionProvider extends ChangeNotifier {
             minIndex = 1;
           }
         }
-        columnHeaders = await getColumnsFromMap(currentQuery: currentQuery);
+        columnHeaders =
+            await getColumnsFromMap(currentQuery: queryToBeExecuted);
       } else {
         results = [];
         columnHeaders = [];
@@ -94,8 +98,7 @@ class PostgresConnectionProvider extends ChangeNotifier {
   }
 
   Future<List<dynamic>> getColumnsFromMap({String currentQuery}) async {
-    var resultMap = await postgreSQLConnection.mappedResultsQuery(
-        currentQuery ?? '${query.trim()} limit ${offset + 1}');
+    var resultMap = await postgreSQLConnection.mappedResultsQuery(currentQuery);
 
     // Gets the column names as list
     Map tables = Map.from(resultMap.first);
@@ -123,7 +126,7 @@ class PostgresConnectionProvider extends ChangeNotifier {
     sortAscending = true;
   }
 
-  void resetPaginationCount(){
+  void resetPaginationCount() {
     minIndex = 0;
     maxIndex = 0;
     offset = 50;
@@ -131,10 +134,52 @@ class PostgresConnectionProvider extends ChangeNotifier {
     reachedMaxRows = false;
   }
 
-  void resetMaxRows(){
-    if(reachedMaxRows){
+  void resetMaxRows() {
+    if (reachedMaxRows) {
       reachedMaxRows = !reachedMaxRows;
       notifyListeners();
     }
+  }
+
+  String checkQuery(String currentQuery) {
+    String query = '';
+    String orderSubString = '', limitSubString = '', orderWithoutLimit = '';
+
+    if (currentQuery.contains('order')) {
+      orderSubString = currentQuery.substring(currentQuery.indexOf('order'));
+    }
+    if (currentQuery.contains('limit')) {
+      limitSubString = currentQuery.substring(currentQuery.indexOf('limit'));
+    }
+
+    if (orderSubString.isNotEmpty) {
+      if (orderSubString.contains('limit')) {
+        orderWithoutLimit =
+            orderSubString.replaceAll(limitSubString, '').trim();
+      } else {
+        orderWithoutLimit = orderSubString.trim();
+      }
+
+      query +=
+          currentQuery.replaceAll(orderSubString, orderWithoutLimit).trim();
+    } else if (limitSubString.isNotEmpty) {
+      query += currentQuery.replaceAll(limitSubString, '').trim();
+    } else {
+      query += currentQuery.trim();
+    }
+
+    this.query = query;
+    executableQuery = query;
+
+    return executableQuery + ' ' + 'limit ${offset + 1}';
+  }
+
+  String removeSemiColon(String currentQuery) {
+    if (currentQuery.trim().lastIndexOf(";") ==
+        currentQuery.trim().length - 1) {
+      currentQuery =
+          currentQuery.trim().substring(0, currentQuery.trim().length - 1);
+    }
+    return currentQuery.trim();
   }
 }

@@ -19,21 +19,23 @@ class ConnectionsList extends StatelessWidget {
       body: SafeArea(
         child: Container(
           padding: EdgeInsets.all(15.0),
-          child:  connectionsListProvider.connections.isEmpty
+          child: connectionsListProvider.connections.isEmpty
               ? Center(
-                  child: Text(connectionsListProvider.sharedPreferences != null ? 'No Connections Found' : 'Loading connections...'),
+                  child: Text(connectionsListProvider.sharedPreferences != null
+                      ? 'No Connections Found'
+                      : 'Loading connections...'),
                 )
-              : ListView(
-                  children: connectionsListProvider.connections
-                      .map((connectionProvider) => ChangeNotifierProvider<
-                              PostgresConnectionProvider>.value(
-                            value: connectionProvider,
-                            child: ConnectionUI(
-                              connectionModel:
-                                  connectionProvider.connectionModel,
-                            ),
-                          ))
-                      .toList()),
+              : ListView.builder(
+                  itemCount: connectionsListProvider.connections.length,
+                  itemBuilder: (context, index) =>
+                      ChangeNotifierProvider<PostgresConnectionProvider>.value(
+                        value: connectionsListProvider.connections[index],
+                        child: ConnectionUI(
+                          currentIndex: index,
+                          connectionModel: connectionsListProvider
+                              .connections[index].connectionModel,
+                        ),
+                      )),
         ),
       ),
       drawer: DrawerWidget(),
@@ -54,7 +56,8 @@ class ConnectionsList extends StatelessWidget {
 
 class ConnectionUI extends StatelessWidget {
   final ConnectionModel connectionModel;
-  ConnectionUI({@required this.connectionModel});
+  final int currentIndex;
+  ConnectionUI({@required this.connectionModel, @required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +72,7 @@ class ConnectionUI extends StatelessWidget {
               barrierDismissible: false,
               builder: (_) => ConnectingDialog(
                     postgresConnectionProvider: postgresConnectionProvider,
+                    currentIndex: currentIndex,
                   ));
         },
         child: Card(
@@ -101,7 +105,9 @@ class ConnectionUI extends StatelessWidget {
 
 class ConnectingDialog extends StatefulWidget {
   final PostgresConnectionProvider postgresConnectionProvider;
-  ConnectingDialog({@required this.postgresConnectionProvider});
+  final int currentIndex;
+  ConnectingDialog(
+      {@required this.postgresConnectionProvider, @required this.currentIndex});
 
   @override
   _ConnectingDialogState createState() => _ConnectingDialogState();
@@ -112,14 +118,20 @@ class _ConnectingDialogState extends State<ConnectingDialog> {
 
   Future<void> executeAfterBuild(BuildContext context,
       PostgresConnectionProvider postgresConnectionProvider) async {
+    final ConnectionsListProvider connectionsListProvider =
+        Provider.of<ConnectionsListProvider>(context);
+
     await postgresConnectionProvider.connectToPostgres();
     if (postgresConnectionProvider.isConnected) {
+      connectionsListProvider.currentConnectionIndex = widget.currentIndex;
       Navigator.of(context).pop();
       Navigator.push(
-          context, MaterialPageRoute(builder: (_) => ChangeNotifierProvider<PostgresConnectionProvider>.value(
-          value: postgresConnectionProvider,
-          child: DatabasePage()
-      )));
+          context,
+          MaterialPageRoute(
+              builder: (_) =>
+                  ChangeNotifierProvider<PostgresConnectionProvider>.value(
+                      value: postgresConnectionProvider,
+                      child: DatabasePage())));
     } else {
       setState(() {
         connectionError = true;
@@ -131,7 +143,7 @@ class _ConnectingDialogState extends State<ConnectingDialog> {
   Widget build(BuildContext context) {
     executeAfterBuild(context, widget.postgresConnectionProvider);
     return AlertDialog(
-      title: Row(
+      title: Wrap(
         children: <Widget>[
           connectionError
               ? Container()

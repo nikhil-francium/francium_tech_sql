@@ -12,47 +12,51 @@ class ResultsPage extends StatelessWidget {
         appBar: AppBar(title: Text('Results')),
         body: Column(
           children: <Widget>[
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Visibility(
-                    visible: postgresConnectionProvider.minIndex > 1,
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_left),
-                      onPressed: () async{
-                        postgresConnectionProvider.reachedMaxRows = false;
-                        String currentQuery =
-                            '${postgresConnectionProvider.query}  limit ${postgresConnectionProvider.offset + 1} offset ${postgresConnectionProvider.minIndex - postgresConnectionProvider.offset - 1}';
-                        await postgresConnectionProvider.executeQuery(
-                            currentQuery: currentQuery,isForwardFetch: false);
-                      },
-                    ),
-                  ),
-                  Text(
-                      '${postgresConnectionProvider.minIndex} - ${postgresConnectionProvider.maxIndex}'),
-                  Visibility(
-                    visible: !postgresConnectionProvider.reachedMaxRows,
-                    child: IconButton(
+            postgresConnectionProvider.minIndex != 0 &&
+                    postgresConnectionProvider.maxIndex != 0
+                ? Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Visibility(
+                          visible: postgresConnectionProvider.minIndex > 1,
+                          child: IconButton(
+                            icon: Icon(Icons.arrow_left),
+                            onPressed: () async {
+                              postgresConnectionProvider.reachedMaxRows = false;
+                              String currentQuery =
+                                  '${postgresConnectionProvider.executableQuery}  limit ${postgresConnectionProvider.offset + 1} offset ${postgresConnectionProvider.minIndex - postgresConnectionProvider.offset - 1}';
+                              await postgresConnectionProvider.executeQuery(
+                                  currentQuery: currentQuery,
+                                  isForwardFetch: false);
+                            },
+                          ),
+                        ),
+                        Text(
+                            '${postgresConnectionProvider.minIndex} - ${postgresConnectionProvider.maxIndex}'),
+                        Visibility(
+                          visible: !postgresConnectionProvider.reachedMaxRows,
+                          child: IconButton(
                             icon: Icon(Icons.arrow_right),
                             onPressed: () async {
                               String currentQuery =
-                                  '${postgresConnectionProvider.query}  limit ${postgresConnectionProvider.offset + 1} offset ${postgresConnectionProvider.minIndex + postgresConnectionProvider.offset - 1}';
+                                  '${postgresConnectionProvider.executableQuery}  limit ${postgresConnectionProvider.offset + 1} offset ${postgresConnectionProvider.minIndex + postgresConnectionProvider.offset - 1}';
                               await postgresConnectionProvider.executeQuery(
                                   currentQuery: currentQuery);
                             },
                           ),
-                  ),
-                ],
-              ),
-            ),
-            postgresConnectionProvider.results.isEmpty
-                ? Center(
-                    child: Text('No results found'),
+                        ),
+                      ],
+                    ),
                   )
-                : Expanded(
-                    child: ListView(
+                : Container(),
+            Expanded(
+              child: postgresConnectionProvider.results.isEmpty
+                  ? Center(
+                      child: Text('No results found'),
+                    )
+                  : ListView(
                       children: <Widget>[
                         Container(
                           child: Scrollbar(
@@ -69,7 +73,7 @@ class ResultsPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
+            ),
           ],
         ));
   }

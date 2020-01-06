@@ -10,6 +10,7 @@ class ConnectionsListProvider extends ChangeNotifier {
   SharedPreferences sharedPreferences;
   List<PostgresConnectionProvider> connections = [];
   bool isDarkTheme = false;
+  int currentConnectionIndex;
 
   ConnectionsListProvider() {
     initializeSharedPreferences();

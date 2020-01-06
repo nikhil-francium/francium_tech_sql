@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:francium_tech_sql/pages/query/results_page.dart';
+import 'package:francium_tech_sql/providers/connections_list_provider.dart';
 import 'package:francium_tech_sql/providers/postgres_connection_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +22,9 @@ class _QueryPageState extends State<QueryPage> {
     streamController = StreamController();
     tabs = [
       MessagePage(),
-      QueryEditorPage(streamController: streamController,),
+      QueryEditorPage(
+        streamController: streamController,
+      ),
       ResultsPage(),
     ];
     super.initState();
@@ -68,6 +72,21 @@ class QueryEditorPage extends StatelessWidget {
   QueryEditorPage({@required this.streamController});
   @override
   Widget build(BuildContext context) {
+    Future<void> saveQueries() async {
+      final ConnectionsListProvider connectionsListProvider =
+          Provider.of<ConnectionsListProvider>(context, listen: false);
+      final PostgresConnectionProvider postgresConnectionProvider =
+          Provider.of<PostgresConnectionProvider>(context,listen: false);
+
+      List<String> connectionsList = List.of(connectionsListProvider
+          .sharedPreferences
+          .getStringList('connections'));
+      connectionsList[connectionsListProvider.currentConnectionIndex] =
+          jsonEncode(postgresConnectionProvider.connectionModel.toJson());
+      await connectionsListProvider.sharedPreferences
+          .setStringList('connections', connectionsList);
+    }
+
     final PostgresConnectionProvider postgresConnectionProvider =
         Provider.of<PostgresConnectionProvider>(context);
     return Scaffold(
@@ -75,7 +94,13 @@ class QueryEditorPage extends StatelessWidget {
         title: Text('Execute Query'),
         actions: <Widget>[
           IconButton(
-              icon: Icon(Icons.save), color: Colors.white, onPressed: () {})
+              icon: Icon(Icons.save),
+              color: Colors.white,
+              onPressed: () async {
+                postgresConnectionProvider.connectionModel.savedQueries
+                    .add(postgresConnectionProvider.getQuery().trim());
+                await saveQueries();
+              })
         ],
       ),
       body: Container(
@@ -100,6 +125,9 @@ class QueryEditorPage extends StatelessWidget {
         onPressed: () async {
           postgresConnectionProvider.resetPaginationCount();
           postgresConnectionProvider.resetFilters();
+          postgresConnectionProvider.connectionModel.historyQueries
+              .add(postgresConnectionProvider.getQuery().trim());
+          await saveQueries();
           await postgresConnectionProvider.executeQuery();
           streamController.sink.add(2);
         },
@@ -113,9 +141,11 @@ class MessagePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PostgresConnectionProvider postgresConnectionProvider =
-    Provider.of<PostgresConnectionProvider>(context);
+        Provider.of<PostgresConnectionProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Message'),),
+      appBar: AppBar(
+        title: Text('Message'),
+      ),
       body: Center(
         child: Text(postgresConnectionProvider.message.toString()),
       ),
