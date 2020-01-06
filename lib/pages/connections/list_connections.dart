@@ -4,6 +4,7 @@ import 'package:francium_tech_sql/pages/connections/new_connection.dart';
 import 'package:francium_tech_sql/pages/database/database_page.dart';
 import 'package:francium_tech_sql/providers/connections_list_provider.dart';
 import 'package:francium_tech_sql/providers/postgres_connection_provider.dart';
+import 'package:francium_tech_sql/widgets/DrawerWidget.dart';
 import 'package:provider/provider.dart';
 
 class ConnectionsList extends StatelessWidget {
@@ -35,6 +36,7 @@ class ConnectionsList extends StatelessWidget {
                       .toList()),
         ),
       ),
+      drawer: DrawerWidget(),
       floatingActionButton: Visibility(
         visible: connectionsListProvider.sharedPreferences != null,
         child: FloatingActionButton(

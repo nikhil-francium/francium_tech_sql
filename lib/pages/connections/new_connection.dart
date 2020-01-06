@@ -5,6 +5,7 @@ import 'package:francium_tech_sql/models/connection_model.dart';
 import 'package:francium_tech_sql/pages/connections/list_connections.dart';
 import 'package:francium_tech_sql/providers/connections_list_provider.dart';
 import 'package:francium_tech_sql/validators/connection_validators.dart';
+import 'package:francium_tech_sql/widgets/DrawerWidget.dart';
 import 'package:provider/provider.dart';
 
 class NewConnectionPage extends StatefulWidget {
@@ -160,6 +161,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
           ),
         ),
       ),
+      endDrawer: DrawerWidget(),
     );
   }
 }
