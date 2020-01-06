@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:francium_tech_sql/pages/database/tables_page.dart';
 import 'package:francium_tech_sql/providers/postgres_connection_provider.dart';
+import 'package:francium_tech_sql/widgets/DrawerWidget.dart';
 import 'package:provider/provider.dart';
 
 class DatabasePage extends StatelessWidget {
@@ -52,6 +53,7 @@ class DatabasePage extends StatelessWidget {
             ),
           ),
         ),
+        endDrawer: DrawerWidget(),
       ),
     );
   }
