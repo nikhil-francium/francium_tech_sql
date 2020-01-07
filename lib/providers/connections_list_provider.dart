@@ -53,4 +53,21 @@ class ConnectionsListProvider extends ChangeNotifier {
     await sharedPreferences.setBool('darkTheme', isDarkTheme);
     notifyListeners();
   }
+
+  Future<void> editConnection({@required ConnectionModel connectionModel, @required int index}) async{
+    connections[index].updateConnectionModel(currentConnectionModel: connectionModel);
+    List<String> connectionsList =
+        sharedPreferences.getStringList('connections');
+    connectionsList[index] = jsonEncode(connectionModel.toJson());
+    await sharedPreferences.setStringList('connections', connectionsList);
+    notifyListeners();
+  }
+
+  Future<void> deleteConnection(index) async{
+    connections.removeAt(index);
+    List<String> connectionsList = sharedPreferences.getStringList('connections');
+    connectionsList.removeAt(index);
+    await sharedPreferences.setStringList('connections', connectionsList);
+    notifyListeners();
+  }
 }

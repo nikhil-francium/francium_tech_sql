@@ -4,7 +4,7 @@ import 'package:francium_tech_sql/models/postgres_connection_model.dart';
 import 'package:postgres/postgres.dart';
 
 class PostgresConnectionProvider extends ChangeNotifier {
-  final ConnectionModel connectionModel;
+  ConnectionModel connectionModel;
   PostgreSQLConnection postgreSQLConnection;
   bool isConnected = false;
   String query;
@@ -42,6 +42,10 @@ class PostgresConnectionProvider extends ChangeNotifier {
 
   String getQuery() {
     return query;
+  }
+
+  updateConnectionModel({@required ConnectionModel currentConnectionModel}){
+      connectionModel = currentConnectionModel;
   }
 
   Future<void> executeQuery(

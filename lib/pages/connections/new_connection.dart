@@ -9,6 +9,9 @@ import 'package:francium_tech_sql/widgets/DrawerWidget.dart';
 import 'package:provider/provider.dart';
 
 class NewConnectionPage extends StatefulWidget {
+  final int index;
+  NewConnectionPage({this.index});
+
   @override
   _NewConnectionPageState createState() => _NewConnectionPageState();
 }
@@ -23,11 +26,11 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
       userController,
       passwordController,
       portController;
+
   @override
   void initState() {
     connectionValidator = ConnectionValidator();
     formKey = GlobalKey<FormState>();
-    connectionModel = ConnectionModel();
     connectionNameController = TextEditingController();
     hostController = TextEditingController();
     databaseController = TextEditingController();
@@ -40,6 +43,10 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final connectionList = Provider.of<ConnectionsListProvider>(context);
+    connectionModel = widget.index == null
+        ? ConnectionModel()
+        : connectionList.connections[widget.index].connectionModel;
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Connection'),
@@ -57,7 +64,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
                     child: ListTile(
                       leading: const Icon(Icons.settings_input_component),
                       title: TextFormField(
-                          controller: connectionNameController,
+                          initialValue: connectionModel.connectionName,
                           onChanged: (String value) {
                             if (value.trim().isNotEmpty) {
                               connectionModel.connectionName = value.trim();
@@ -76,7 +83,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
                     child: ListTile(
                       leading: const Icon(FontAwesomeIcons.server),
                       title: TextFormField(
-                          controller: hostController,
+                          initialValue: connectionModel.host,
                           onChanged: (String value) {
                             if (value.trim().isNotEmpty) {
                               connectionModel.host = value.trim();
@@ -93,7 +100,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
                     child: ListTile(
                       leading: const Icon(FontAwesomeIcons.database),
                       title: TextFormField(
-                          controller: databaseController,
+                          initialValue: connectionModel.database,
                           onChanged: (String value) {
                             if (value.trim().isNotEmpty) {
                               connectionModel.database = value.trim();
@@ -112,7 +119,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
                     child: ListTile(
                       leading: const Icon(Icons.person),
                       title: TextFormField(
-                          controller: userController,
+                          initialValue: connectionModel.user,
                           onChanged: (String value) {
                             if (value.trim().isNotEmpty) {
                               connectionModel.user = value.trim();
@@ -134,7 +141,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
                     child: ListTile(
                       leading: const Icon(Icons.power_input),
                       title: TextFormField(
-                          controller: portController,
+                          initialValue: connectionModel.port,
                           onChanged: (String value) {
                             if (value.trim().isNotEmpty) {
                               connectionModel.port = value.trim();
@@ -154,6 +161,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
                   CreateConnection(
                     formKey: formKey,
                     connectionModel: connectionModel,
+                    index: widget.index,
                   )
                 ],
               ),
@@ -193,7 +201,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
             Container(
               width: MediaQuery.of(context).size.width * 0.6,
               child: TextFormField(
-                  controller: widget.passwordController,
+                  initialValue: widget.connectionModel.password,
                   onChanged: (String value) {
                     if (value.trim().isNotEmpty) {
                       widget.connectionModel.password = value.trim();
@@ -226,7 +234,11 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
 class CreateConnection extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final ConnectionModel connectionModel;
-  CreateConnection({@required this.formKey, @required this.connectionModel});
+  final int index;
+  CreateConnection(
+      {@required this.formKey,
+      @required this.connectionModel,
+      @required this.index});
   @override
   _CreateConnectionState createState() => _CreateConnectionState();
 }
@@ -240,14 +252,21 @@ class _CreateConnectionState extends State<CreateConnection> {
       margin: EdgeInsets.all(15.0),
       child: RaisedButton(
         padding: EdgeInsets.symmetric(vertical: 15.0),
-        child: Text('Add Connection'),
-        onPressed: () async{
+        child: Text('${widget.index == null ? "Add" : "Edit"} Connection'),
+        onPressed: () async {
           FocusScope.of(context).requestFocus(FocusNode());
           if (widget.formKey.currentState.validate()) {
-            await connectionsListProvider.addConnection(
-                connectionModel: widget.connectionModel);
-            Navigator.pushAndRemoveUntil(context,
-                MaterialPageRoute(builder: (context) => ConnectionsList()),(Route<dynamic> route) => false);
+            if (widget.index == null) {
+              await connectionsListProvider.addConnection(
+                  connectionModel: widget.connectionModel);
+            } else {
+              await connectionsListProvider.editConnection(
+                  connectionModel: widget.connectionModel, index: widget.index);
+            }
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => ConnectionsList()),
+                (Route<dynamic> route) => false);
           }
         },
       ),
