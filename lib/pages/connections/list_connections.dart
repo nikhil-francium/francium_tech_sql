@@ -6,6 +6,7 @@ import 'package:francium_tech_sql/providers/connections_list_provider.dart';
 import 'package:francium_tech_sql/providers/postgres_connection_provider.dart';
 import 'package:francium_tech_sql/widgets/DrawerWidget.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ConnectionsList extends StatelessWidget {
   @override
@@ -18,7 +19,6 @@ class ConnectionsList extends StatelessWidget {
       ),
       body: SafeArea(
         child: Container(
-          padding: EdgeInsets.all(15.0),
           child: connectionsListProvider.connections.isEmpty
               ? Center(
                   child: Text(connectionsListProvider.sharedPreferences != null
@@ -63,45 +63,70 @@ class ConnectionUI extends StatelessWidget {
   Widget build(BuildContext context) {
     final PostgresConnectionProvider postgresConnectionProvider =
         Provider.of<PostgresConnectionProvider>(context);
+    final ConnectionsListProvider connectionsListProvider =
+        Provider.of<ConnectionsListProvider>(context);
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 15.0),
-      child: GestureDetector(
-        onTap: () {
-          showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => ConnectingDialog(
-                    postgresConnectionProvider: postgresConnectionProvider,
-                    currentIndex: currentIndex,
-                  ));
-        },
-        child: Card(
-          child: Column(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child:
-                    Text('Connection Name - ${connectionModel.connectionName}'),
+      child: Card(
+        child: GestureDetector(
+          onTap: () {
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => ConnectingDialog(
+                      postgresConnectionProvider: postgresConnectionProvider,
+                      currentIndex: currentIndex,
+                    ));
+          },
+          child: InkWell(
+            child: Slidable(
+              actionPane: SlidableStrechActionPane(),
+              actionExtentRatio: 0.25,
+              secondaryActions: <Widget>[
+                IconSlideAction(
+                  caption: 'Edit',
+                  color: Colors.grey[200],
+                  icon: Icons.edit,
+                  onTap: () => editConnection(currentIndex, context),
+                ),
+                IconSlideAction(
+                  caption: 'Delete',
+                  icon: Icons.delete,
+                  color: Colors.grey[200],
+                  onTap: () => connectionsListProvider.deleteConnection(currentIndex),
+                ),
+                ],
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child:
+                        Text('Connection Name - ${connectionModel.connectionName}'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('Host - ${connectionModel.host}'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('User - ${connectionModel.user}'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('Database - ${connectionModel.database}'),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text('Host - ${connectionModel.host}'),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text('User - ${connectionModel.user}'),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text('Database - ${connectionModel.database}'),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      )
     );
   }
+  editConnection(index, context) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => NewConnectionPage(index: index)));
+  }
 }
+
 
 class ConnectingDialog extends StatefulWidget {
   final PostgresConnectionProvider postgresConnectionProvider;
