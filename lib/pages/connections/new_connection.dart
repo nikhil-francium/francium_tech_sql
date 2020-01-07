@@ -49,7 +49,7 @@ class _NewConnectionPageState extends State<NewConnectionPage> {
         : connectionList.connections[widget.index].connectionModel;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Connection'),
+        title: Text('${widget.index == null ? "Add" : "Edit"} Connection'),
       ),
       body: SafeArea(
         child: Container(
