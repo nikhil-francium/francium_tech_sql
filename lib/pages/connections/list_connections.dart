@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:francium_tech_sql/models/connection_model.dart';
 import 'package:francium_tech_sql/pages/connections/new_connection.dart';
 import 'package:francium_tech_sql/pages/database/database_page.dart';
@@ -16,15 +17,18 @@ class ConnectionsList extends StatelessWidget {
 
     List<Widget> multiSelectOptions() {
       return [
-        if(connectionsListProvider.selectedConnectionIndexes.length == 1)
-        IconButton(
-          icon: Icon(Icons.edit),
-          onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute(builder: (context) => NewConnectionPage( index:
-            connectionsListProvider.selectedConnectionIndexes[0])));
-            connectionsListProvider.unselectConnection();
-          }
-        ),
+        if (connectionsListProvider.selectedConnectionIndexes.length == 1)
+          IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () async {
+                await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => NewConnectionPage(
+                            index: connectionsListProvider
+                                .selectedConnectionIndexes[0])));
+                connectionsListProvider.unselectConnection();
+              }),
         IconButton(
           icon: Icon(Icons.select_all),
           onPressed: () {
@@ -118,27 +122,87 @@ class ConnectionUI extends StatelessWidget {
         Provider.of<PostgresConnectionProvider>(context);
     connectionsListProvider = Provider.of<ConnectionsListProvider>(context);
 
-    Widget cardDetails() {
-      return Column(
+    Widget _buildIconText(text, IconData icon, TextStyle style) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text('Connection Name - ${connectionModel.connectionName}'),
+          Flexible(
+              flex: 3,
+              child: Icon(
+                icon,
+                size: 18,
+              )),
+          SizedBox(
+            width: 5,
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text('Host - ${connectionModel.host}'),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text('User - ${connectionModel.user}'),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text('Database - ${connectionModel.database}'),
-          ),
+          Flexible(
+            flex: 17,
+            child: Text(
+              "$text",
+              style: style,
+            ),
+          )
         ],
       );
+    }
+
+    Widget cardDetails() {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(15.0, 10.0, 5.0, 10.0),
+        child: Container(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _buildIconText(
+                    connectionModel.connectionName,
+                    Icons.settings_input_component,
+                    Theme.of(context).textTheme.body2),
+                SizedBox(
+                  height: 10,
+                ),
+                _buildIconText(connectionModel.host,
+                    FontAwesomeIcons.server, Theme.of(context).textTheme.body1),
+                SizedBox(
+                  height: 10,
+                ),
+                _buildIconText(connectionModel.user, Icons.person,
+                    Theme.of(context).textTheme.body1),
+                SizedBox(
+                  height: 10,
+                ),
+                _buildIconText(
+                    connectionModel.database,
+                    FontAwesomeIcons.database,
+                    Theme.of(context).textTheme.body1),
+              ],
+            ),
+          ),
+        ),
+      );
+      // return Column(
+      //   children: <Widget>[
+      //     Padding(
+      //       padding: const EdgeInsets.all(8.0),
+      //       child: Text('Connection Name - ${connectionModel.connectionName}'),
+      //     ),
+      //     Padding(
+      //       padding: const EdgeInsets.all(8.0),
+      //       child: Text('Host - ${connectionModel.host}'),
+      //     ),
+      //     Padding(
+      //       padding: const EdgeInsets.all(8.0),
+      //       child: Text('User - ${connectionModel.user}'),
+      //     ),
+      //     Padding(
+      //       padding: const EdgeInsets.all(8.0),
+      //       child: Text('Database - ${connectionModel.database}'),
+      //     ),
+      //   ],
+      // );
     }
 
     return Container(
@@ -155,10 +219,8 @@ class ConnectionUI extends StatelessWidget {
         },
         child: InkWell(
           onTap: () {
-            if (connectionsListProvider.selectedConnectionIndexes
-                .contains(currentIndex)) {
-              connectionsListProvider.selectConnection(
-                  selectedIndex: currentIndex);
+            if (connectionsListProvider.selectedConnectionIndexes.length > 0) {
+              highlightConnection(currentIndex);
             } else {
               showDialog(
                   context: context,
