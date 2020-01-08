@@ -13,10 +13,62 @@ class ConnectionsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final ConnectionsListProvider connectionsListProvider =
         Provider.of<ConnectionsListProvider>(context);
+
+    List<Widget> multiSelectOptions() {
+      return [
+        if(connectionsListProvider.selectedConnectionIndexes.length == 1)
+        IconButton(
+          icon: Icon(Icons.edit),
+          onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (context) => NewConnectionPage( index:
+            connectionsListProvider.selectedConnectionIndexes[0])));
+            connectionsListProvider.unselectConnection();
+          }
+        ),
+        IconButton(
+          icon: Icon(Icons.select_all),
+          onPressed: () {
+            connectionsListProvider.selectAllConnections();
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.delete),
+          onPressed: () {
+            connectionsListProvider.deleteAllConnections();
+          },
+        )
+      ];
+    }
+
+    Widget appbarTitle() {
+      return Row(children: <Widget>[
+        IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            connectionsListProvider.unselectConnection();
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Text(connectionsListProvider.selectedConnectionIndexes.length
+              .toString()),
+        )
+      ]);
+    }
+
+    Widget customAppBar() {
+      List<int> selectedIndexes =
+          connectionsListProvider.selectedConnectionIndexes;
+      return AppBar(
+          title: (selectedIndexes.length > 0)
+              ? appbarTitle()
+              : Text('Francium SQL'),
+          automaticallyImplyLeading: !(selectedIndexes.length > 0),
+          actions: (selectedIndexes.length > 0) ? multiSelectOptions() : []);
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Francium SQL'),
-      ),
+      appBar: customAppBar(),
       body: SafeArea(
         child: Container(
           child: connectionsListProvider.connections.isEmpty
@@ -58,75 +110,102 @@ class ConnectionUI extends StatelessWidget {
   final ConnectionModel connectionModel;
   final int currentIndex;
   ConnectionUI({@required this.connectionModel, @required this.currentIndex});
+  ConnectionsListProvider connectionsListProvider;
 
   @override
   Widget build(BuildContext context) {
     final PostgresConnectionProvider postgresConnectionProvider =
         Provider.of<PostgresConnectionProvider>(context);
-    final ConnectionsListProvider connectionsListProvider =
-        Provider.of<ConnectionsListProvider>(context);
-    return Container(
-      child: Card(
-        child: GestureDetector(
-          onTap: () {
-            showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => ConnectingDialog(
-                      postgresConnectionProvider: postgresConnectionProvider,
-                      currentIndex: currentIndex,
-                    ));
-          },
-          child: InkWell(
-            child: Slidable(
-              actionPane: SlidableStrechActionPane(),
-              actionExtentRatio: 0.25,
-              secondaryActions: <Widget>[
-                IconSlideAction(
-                  caption: 'Edit',
-                  color: Colors.grey[200],
-                  icon: Icons.edit,
-                  onTap: () => editConnection(currentIndex, context),
-                ),
-                IconSlideAction(
-                  caption: 'Delete',
-                  icon: Icons.delete,
-                  color: Colors.grey[200],
-                  onTap: () => connectionsListProvider.deleteConnection(currentIndex),
-                ),
-                ],
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child:
-                        Text('Connection Name - ${connectionModel.connectionName}'),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('Host - ${connectionModel.host}'),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('User - ${connectionModel.user}'),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('Database - ${connectionModel.database}'),
-                  ),
-                ],
-              ),
-            ),
+    connectionsListProvider = Provider.of<ConnectionsListProvider>(context);
+
+    Widget cardDetails() {
+      return Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Connection Name - ${connectionModel.connectionName}'),
           ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Host - ${connectionModel.host}'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('User - ${connectionModel.user}'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Database - ${connectionModel.database}'),
+          ),
+        ],
+      );
+    }
+
+    return Container(
+        child: Card(
+      shape: RoundedRectangleBorder(
+          side: BorderSide(
+              color: connectionsListProvider.selectedConnectionIndexes
+                      .contains(currentIndex)
+                  ? Colors.blue[900]
+                  : Colors.white)),
+      child: GestureDetector(
+        onLongPress: () {
+          highlightConnection(currentIndex);
+        },
+        child: InkWell(
+          onTap: () {
+            if (connectionsListProvider.selectedConnectionIndexes
+                .contains(currentIndex)) {
+              connectionsListProvider.selectConnection(
+                  selectedIndex: currentIndex);
+            } else {
+              showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => ConnectingDialog(
+                        postgresConnectionProvider: postgresConnectionProvider,
+                        currentIndex: currentIndex,
+                      ));
+            }
+          },
+          child: (connectionsListProvider.selectedConnectionIndexes.length == 0)
+              ? Slidable(
+                  actionPane: SlidableStrechActionPane(),
+                  actionExtentRatio: 0.25,
+                  secondaryActions: <Widget>[
+                    IconSlideAction(
+                      caption: 'Edit',
+                      color: Colors.grey[200],
+                      icon: Icons.edit,
+                      onTap: () => editConnection(currentIndex, context),
+                    ),
+                    IconSlideAction(
+                      caption: 'Delete',
+                      icon: Icons.delete,
+                      color: Colors.grey[200],
+                      onTap: () => connectionsListProvider
+                          .deleteConnection(currentIndex),
+                    ),
+                  ],
+                  child: cardDetails())
+              : cardDetails(),
         ),
-      )
-    );
+      ),
+    ));
   }
+
   editConnection(index, context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => NewConnectionPage(index: index)));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => NewConnectionPage(index: index)));
+  }
+
+  highlightConnection(int currentIndex) {
+    connectionsListProvider.selectConnection(selectedIndex: currentIndex);
   }
 }
-
 
 class ConnectingDialog extends StatefulWidget {
   final PostgresConnectionProvider postgresConnectionProvider;
