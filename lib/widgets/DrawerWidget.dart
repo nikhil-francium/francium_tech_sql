@@ -18,52 +18,52 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     final ConnectionsListProvider connectionsListProvider = Provider.of<ConnectionsListProvider>(context);
 
     return Drawer(
-      child: ListView(
-          padding: const EdgeInsets.all(0.0),
-          children: <Widget>[
-            DrawerHeader(
-      child: Text(
-        'Francium Sql',
-        // AppLocalizations.of(context).translate('francium_sql'),
-        style: TextStyle(color: Colors.white),
-      ),
-      decoration: BoxDecoration(
-        color: Theme
-            .of(context)
-            .accentColor,
-      ),
-            ),
-            Padding(
-      padding: const EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Text(
-            'Dark Theme',
-            // AppLocalizations.of(context).translate('dark_theme')
-          ),
-          Switch(
-            value: connectionsListProvider.isDarkTheme,
-            onChanged: (newVal) async{
-              await connectionsListProvider.switchTheme();
-            },
-          ),
-        ],
-      ),
-            ),
-            SizedBox(
-      height: 10,
-            ),
-            Padding(
-      padding: const EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-      child: InkWell(
-        child: Text('Quit'),
-        onTap: () => exit(0)
-      )
-            )
-          ],
+        child: ListView(
+      padding: const EdgeInsets.all(0.0),
+      children: <Widget>[
+        DrawerHeader(
+        child: Text(
+    'Francium Sql',
+    // AppLocalizations.of(context).translate('francium_sql'),
+    style: TextStyle(color: Colors.white),
         ),
-    );
+        decoration: BoxDecoration(
+    color: Theme
+        .of(context)
+        .accentColor,
+        ),
+        ),
+        Padding(
+        padding: const EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+        child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: <Widget>[
+      Text(
+        'Dark Theme',
+        // AppLocalizations.of(context).translate('dark_theme')
+      ),
+      Switch(
+        value: connectionsListProvider.isDarkTheme,
+        onChanged: (newVal) async{
+          await connectionsListProvider.switchTheme();
+        },
+      ),
+    ],
+        ),
+        ),
+        SizedBox(
+        height: 10,
+        ),
+        Padding(
+        padding: const EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+        child: InkWell(
+    child: Text('Quit'),
+    onTap: () => exit(0)
+        )
+        )
+      ],
+    ),
+      );
   }
 }
 

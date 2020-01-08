@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:francium_tech_sql/pages/query/results_page.dart';
