@@ -27,9 +27,20 @@ class ResultsPage extends StatelessWidget {
                               postgresConnectionProvider.reachedMaxRows = false;
                               String currentQuery =
                                   '${postgresConnectionProvider.executableQuery}  limit ${postgresConnectionProvider.offset + 1} offset ${postgresConnectionProvider.minIndex - postgresConnectionProvider.offset - 1}';
+                              showDialog(context: context, barrierDismissible: false, builder: (context){
+                                return AlertDialog(
+                                  title: Wrap(
+                                    children: <Widget>[
+                                      CircularProgressIndicator(),
+                                      Text('Executing Query...')
+                                    ],
+                                  ),
+                                );
+                              });
                               await postgresConnectionProvider.executeQuery(
                                   currentQuery: currentQuery,
                                   isForwardFetch: false);
+                              Navigator.pop(context);
                             },
                           ),
                         ),
@@ -42,8 +53,19 @@ class ResultsPage extends StatelessWidget {
                             onPressed: () async {
                               String currentQuery =
                                   '${postgresConnectionProvider.executableQuery}  limit ${postgresConnectionProvider.offset + 1} offset ${postgresConnectionProvider.minIndex + postgresConnectionProvider.offset - 1}';
+                              showDialog(context: context,barrierDismissible: false, builder: (context){
+                                return AlertDialog(
+                                  title: Wrap(
+                                    children: <Widget>[
+                                      CircularProgressIndicator(),
+                                      Text('Executing Query...')
+                                    ],
+                                  ),
+                                );
+                              });
                               await postgresConnectionProvider.executeQuery(
                                   currentQuery: currentQuery);
+                              Navigator.pop(context);
                             },
                           ),
                         ),

@@ -15,7 +15,7 @@ class PostgresConnectionProvider extends ChangeNotifier {
   int selectedIndex;
   bool sortAscending = true;
   int minIndex = 0, maxIndex = 0, offset = 50, currentOffset = 0;
-  bool reachedMaxRows = false;
+  bool reachedMaxRows = false, isQueryFailed = false;
 
   PostgresConnectionProvider({@required this.connectionModel});
 
@@ -87,31 +87,57 @@ class PostgresConnectionProvider extends ChangeNotifier {
         }
         columnHeaders =
             await getColumnsFromMap(currentQuery: queryToBeExecuted);
+        if(columnHeaders.isEmpty ||  columnHeaders.length != results[0].length){
+          results = [];
+          columnHeaders = [];
+          resetPaginationCount();
+          resetFilters();
+          isQueryFailed = true;
+          message = 'Row length incompatible with columns length';
+
+        }else{
+          message = 'Success';
+        }
       } else {
         results = [];
         columnHeaders = [];
+        message = 'Success';
+        resetPaginationCount();
+        resetFilters();
       }
-      message = 'Success';
       notifyListeners();
     } catch (e) {
       results = [];
       columnHeaders = [];
-      message = 'Failed';
+      resetPaginationCount();
+      resetFilters();
+      isQueryFailed = true;
+      message = e.toString();
+
       notifyListeners();
     }
   }
 
   Future<List<dynamic>> getColumnsFromMap({String currentQuery}) async {
-    var resultMap = await postgreSQLConnection.mappedResultsQuery(currentQuery);
 
-    // Gets the column names as list
-    Map tables = Map.from(resultMap.first);
-    List<dynamic> cells = new List();
-    tables.forEach((k, v) {
-      Map values = Map.from(v);
-      var cols = values.keys.toList().map((col) => "$col").toList();
-      cells.addAll(cols);
-    });
+    List<dynamic> cells = [];
+
+    try {
+      var resultMap = await postgreSQLConnection.mappedResultsQuery(
+          currentQuery);
+
+
+      // Gets the column names as list
+      Map tables = Map.from(resultMap.first);
+      tables.forEach((k, v) {
+        Map values = Map.from(v);
+        var cols = values.keys.toList().map((col) => "$col").toList();
+        cells.addAll(cols);
+      });
+
+    }catch(e){
+
+    }
     return cells;
   }
 
@@ -128,6 +154,7 @@ class PostgresConnectionProvider extends ChangeNotifier {
   void resetFilters() {
     selectedIndex = null;
     sortAscending = true;
+    isQueryFailed = false;
   }
 
   void resetPaginationCount() {
@@ -146,6 +173,9 @@ class PostgresConnectionProvider extends ChangeNotifier {
   }
 
   String checkQuery(String currentQuery) {
+    if(!currentQuery.toLowerCase().trim().startsWith('select')){
+      return currentQuery.trim();
+    }
     String query = '';
     String orderSubString = '', limitSubString = '', orderWithoutLimit = '';
 

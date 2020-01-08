@@ -127,9 +127,24 @@ class QueryEditorPage extends StatelessWidget {
           postgresConnectionProvider.resetFilters();
           postgresConnectionProvider.connectionModel.historyQueries
               .add(postgresConnectionProvider.getQuery().trim());
+          showDialog(context: context,barrierDismissible: false, builder: (context){
+            return AlertDialog(
+              title: Wrap(
+                children: <Widget>[
+                  CircularProgressIndicator(),
+                  Text('Executing Query...')
+                ],
+              ),
+            );
+          });
           await saveQueries();
           await postgresConnectionProvider.executeQuery();
-          streamController.sink.add(2);
+          Navigator.pop(context);
+          if(postgresConnectionProvider.isQueryFailed){
+            streamController.sink.add(0);
+          }else{
+            streamController.sink.add(2);
+          }
         },
         child: Icon(FontAwesomeIcons.bolt),
       ),
@@ -147,7 +162,10 @@ class MessagePage extends StatelessWidget {
         title: Text('Message'),
       ),
       body: Center(
-        child: Text(postgresConnectionProvider.message.toString()),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal:10.0),
+          child: Text(postgresConnectionProvider.message.toString()),
+        ),
       ),
     );
   }
