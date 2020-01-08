@@ -252,7 +252,7 @@ class _CreateConnectionState extends State<CreateConnection> {
       margin: EdgeInsets.all(15.0),
       child: RaisedButton(
         padding: EdgeInsets.symmetric(vertical: 15.0),
-        child: Text('${widget.index == null ? "Add" : "Edit"} Connection'),
+        child: Text('Save'),
         onPressed: () async {
           FocusScope.of(context).requestFocus(FocusNode());
           if (widget.formKey.currentState.validate()) {

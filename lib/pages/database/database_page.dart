@@ -16,8 +16,8 @@ class DatabasePage extends StatelessWidget {
         Provider.of<PostgresConnectionProvider>(context);
 
     return WillPopScope(
-      onWillPop: () {
-        postgresConnectionProvider.closeConnection();
+      onWillPop: () async{
+        await postgresConnectionProvider.closeConnection();
         return Future.value(true);
       },
       child: SafeArea(

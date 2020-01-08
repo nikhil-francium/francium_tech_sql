@@ -25,6 +25,7 @@ class ConnectionsListProvider extends ChangeNotifier {
           sharedPreferences.getStringList('connections');
       if (connectionsList == null) {
         await sharedPreferences.setStringList('connections', []);
+        await sharedPreferences.setBool('isNewUser', true);
       } else {
         if (connectionsList.isNotEmpty) {
           connectionsList.forEach((connection) {

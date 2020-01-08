@@ -120,32 +120,35 @@ class QueryEditorPage extends StatelessWidget {
           ),
         ]),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          postgresConnectionProvider.resetPaginationCount();
-          postgresConnectionProvider.resetFilters();
-          postgresConnectionProvider.connectionModel.historyQueries
-              .add(postgresConnectionProvider.getQuery().trim());
-          showDialog(context: context,barrierDismissible: false, builder: (context){
-            return AlertDialog(
-              title: Wrap(
-                children: <Widget>[
-                  CircularProgressIndicator(),
-                  Text('Executing Query...')
-                ],
-              ),
-            );
-          });
-          await saveQueries();
-          await postgresConnectionProvider.executeQuery();
-          Navigator.pop(context);
-          if(postgresConnectionProvider.isQueryFailed){
-            streamController.sink.add(0);
-          }else{
-            streamController.sink.add(2);
-          }
-        },
-        child: Icon(FontAwesomeIcons.bolt),
+      floatingActionButton: Visibility(
+        visible: postgresConnectionProvider.getQuery().trim().isNotEmpty,
+        child: FloatingActionButton(
+          onPressed: () async {
+            postgresConnectionProvider.resetPaginationCount();
+            postgresConnectionProvider.resetFilters();
+            postgresConnectionProvider.connectionModel.historyQueries
+                .add(postgresConnectionProvider.getQuery().trim());
+            showDialog(context: context,barrierDismissible: false, builder: (context){
+              return AlertDialog(
+                title: Wrap(
+                  children: <Widget>[
+                    CircularProgressIndicator(),
+                    Text('Executing Query...')
+                  ],
+                ),
+              );
+            });
+            await saveQueries();
+            await postgresConnectionProvider.executeQuery();
+            Navigator.pop(context);
+            if(postgresConnectionProvider.isQueryFailed){
+              streamController.sink.add(0);
+            }else{
+              streamController.sink.add(2);
+            }
+          },
+          child: Icon(FontAwesomeIcons.bolt),
+        ),
       ),
     );
   }

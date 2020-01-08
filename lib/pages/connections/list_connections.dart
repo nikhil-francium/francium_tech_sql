@@ -6,6 +6,7 @@ import 'package:francium_tech_sql/pages/database/database_page.dart';
 import 'package:francium_tech_sql/providers/connections_list_provider.dart';
 import 'package:francium_tech_sql/providers/postgres_connection_provider.dart';
 import 'package:francium_tech_sql/widgets/DrawerWidget.dart';
+import 'package:francium_tech_sql/widgets/IntroSlides.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -72,31 +73,49 @@ class ConnectionsList extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: customAppBar(),
+      appBar: !(connectionsListProvider.sharedPreferences == null ||
+              connectionsListProvider.sharedPreferences.getBool('isNewUser') ?? true)
+          ? customAppBar()
+          : null,
       body: SafeArea(
-        child: Container(
-          child: connectionsListProvider.connections.isEmpty
-              ? Center(
-                  child: Text(connectionsListProvider.sharedPreferences != null
-                      ? 'No Connections Found'
-                      : 'Loading connections...'),
-                )
-              : ListView.builder(
-                  itemCount: connectionsListProvider.connections.length,
-                  itemBuilder: (context, index) =>
-                      ChangeNotifierProvider<PostgresConnectionProvider>.value(
-                        value: connectionsListProvider.connections[index],
-                        child: ConnectionUI(
-                          currentIndex: index,
-                          connectionModel: connectionsListProvider
-                              .connections[index].connectionModel,
-                        ),
-                      )),
-        ),
+        child: connectionsListProvider.sharedPreferences == null
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : connectionsListProvider.sharedPreferences.getBool('isNewUser')?? true
+                ? IntroSlides()
+                : Container(
+                    child: connectionsListProvider.connections.isEmpty
+                        ? Center(
+                            child: Text(
+                                connectionsListProvider.sharedPreferences !=
+                                        null
+                                    ? 'No Connections Found'
+                                    : 'Loading connections...'),
+                          )
+                        : ListView.builder(
+                            itemCount:
+                                connectionsListProvider.connections.length,
+                            itemBuilder: (context, index) =>
+                                ChangeNotifierProvider<
+                                    PostgresConnectionProvider>.value(
+                                  value: connectionsListProvider
+                                      .connections[index],
+                                  child: ConnectionUI(
+                                    currentIndex: index,
+                                    connectionModel: connectionsListProvider
+                                        .connections[index].connectionModel,
+                                  ),
+                                )),
+                  ),
       ),
-      drawer: DrawerWidget(),
+      drawer: Visibility(
+          visible: !(connectionsListProvider.sharedPreferences == null ||
+              connectionsListProvider.sharedPreferences.getBool('isNewUser')?? true),
+          child: DrawerWidget()),
       floatingActionButton: Visibility(
-        visible: connectionsListProvider.sharedPreferences != null,
+        visible: !(connectionsListProvider.sharedPreferences == null ||
+            connectionsListProvider.sharedPreferences.getBool('isNewUser')?? true),
         child: FloatingActionButton(
           onPressed: () {
             Navigator.push(context,
@@ -164,8 +183,8 @@ class ConnectionUI extends StatelessWidget {
                 SizedBox(
                   height: 10,
                 ),
-                _buildIconText(connectionModel.host,
-                    FontAwesomeIcons.server, Theme.of(context).textTheme.body1),
+                _buildIconText(connectionModel.host, FontAwesomeIcons.server,
+                    Theme.of(context).textTheme.body1),
                 SizedBox(
                   height: 10,
                 ),
@@ -183,26 +202,6 @@ class ConnectionUI extends StatelessWidget {
           ),
         ),
       );
-      // return Column(
-      //   children: <Widget>[
-      //     Padding(
-      //       padding: const EdgeInsets.all(8.0),
-      //       child: Text('Connection Name - ${connectionModel.connectionName}'),
-      //     ),
-      //     Padding(
-      //       padding: const EdgeInsets.all(8.0),
-      //       child: Text('Host - ${connectionModel.host}'),
-      //     ),
-      //     Padding(
-      //       padding: const EdgeInsets.all(8.0),
-      //       child: Text('User - ${connectionModel.user}'),
-      //     ),
-      //     Padding(
-      //       padding: const EdgeInsets.all(8.0),
-      //       child: Text('Database - ${connectionModel.database}'),
-      //     ),
-      //   ],
-      // );
     }
 
     return Container(
@@ -222,6 +221,7 @@ class ConnectionUI extends StatelessWidget {
             if (connectionsListProvider.selectedConnectionIndexes.length > 0) {
               highlightConnection(currentIndex);
             } else {
+              postgresConnectionProvider.connectionMessage = '';
               showDialog(
                   context: context,
                   barrierDismissible: false,
@@ -286,7 +286,6 @@ class _ConnectingDialogState extends State<ConnectingDialog> {
       PostgresConnectionProvider postgresConnectionProvider) async {
     final ConnectionsListProvider connectionsListProvider =
         Provider.of<ConnectionsListProvider>(context);
-
     await postgresConnectionProvider.connectToPostgres();
     if (postgresConnectionProvider.isConnected) {
       connectionsListProvider.currentConnectionIndex = widget.currentIndex;
@@ -318,7 +317,13 @@ class _ConnectingDialogState extends State<ConnectingDialog> {
                   child: CircularProgressIndicator()),
           Container(
               child: Text(
-                  '${connectionError ? 'Invalid Connection' : 'Connecting...'}'))
+                  '${connectionError ? 'Invalid Connection' : 'Connecting...'}')),
+          Container(
+              padding: EdgeInsets.symmetric(vertical: 5.0),
+              child: Text(
+                widget.postgresConnectionProvider.connectionMessage,
+                style: TextStyle(fontSize: 14),
+              )),
         ],
       ),
       actions: <Widget>[

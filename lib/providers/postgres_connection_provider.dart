@@ -7,9 +7,10 @@ class PostgresConnectionProvider extends ChangeNotifier {
   ConnectionModel connectionModel;
   PostgreSQLConnection postgreSQLConnection;
   bool isConnected = false;
-  String query;
-  String executableQuery;
+  String query = '';
+  String executableQuery = '';
   String message = '';
+  String connectionMessage = '';
   List<List<dynamic>> results = [];
   List<dynamic> columnHeaders = [];
   int selectedIndex;
@@ -22,22 +23,26 @@ class PostgresConnectionProvider extends ChangeNotifier {
   Future<void> connectToPostgres() async {
     await PostgresConnectionModel.getConnection(
             connectionModel: connectionModel)
-        .then((postgreSQLConnection) {
-      if (postgreSQLConnection != null) {
-        isConnected = !postgreSQLConnection.isClosed;
+        .then((PostgresConnectionModel postgresConnectionModel) {
+      if (postgresConnectionModel.postgresConnection != null) {
+        isConnected = !postgresConnectionModel.postgresConnection.isClosed;
+      }else{
+        connectionMessage = postgresConnectionModel.message;
       }
-      this.postgreSQLConnection = postgreSQLConnection;
+      this.postgreSQLConnection = postgresConnectionModel.postgresConnection;
     });
   }
 
-  void closeConnection() {
+  Future<void> closeConnection() async{
     if (postgreSQLConnection != null && !postgreSQLConnection.isClosed) {
-      postgreSQLConnection.close();
+      isConnected = false;
+      await postgreSQLConnection.close();
     }
   }
 
   void updateQuery({@required String query}) {
     this.query = query;
+    notifyListeners();
   }
 
   String getQuery() {
